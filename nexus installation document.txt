@@ -1,0 +1,143 @@
+Nexus Installation on Ubuntu server
+
+1.Create ubuntu server in aws
+storage 20gb t2 medium
+
+In security group add rule selecte AllTCP anywhere-ip4 and save it
+
+2.Login to server run below commands
+
+Update and refresh the package index of your repositories by running the following command:
+
+sudo apt update
+
+Install Java OpenJDK 8 using the following command:
+
+sudo apt install openjdk-8-jdk -y
+
+Verify the Java version on your system by running the following command:
+
+
+java -version
+
+Create a new dedicated user for Nexus named ‘nexus’ with the following command:
+
+sudo useradd -d /opt/nexus -s /bin/bash nexus
+
+Set a password for the ‘nexus’ user by running the following command and following the prompts:
+
+sudo passwd nexus
+
+
+Create a new configuration file ‘nexus.conf’ for the ‘nexus’ user’s ulimit settings using the nano editor
+
+ulimit -n 65536
+
+Create a new configuration file ‘nexus.conf’ for the ‘nexus’ user’s ulimit settings using the nano editor:
+
+
+sudo nano /etc/security/limits.d/nexus.conf  add below lines
+
+nexus - nofile 65536 and save the file
+
+Installing Nexus Repository Manager:
+
+Download the Nexus Repository Manager package using the wget command:
+
+wget https://download.sonatype.com/nexus/3/nexus-3.41.1-01-unix.tar.gz
+
+Extract the downloaded package using the tar command:
+
+tar xzf nexus-3.41.1-01-unix.tar.gz
+
+Move the extracted directories to ‘/opt’ with the following commands
+
+mv nexus-3.41.1-01 /opt/nexus
+mv sonatype-work /opt/sonatype-work
+
+Change the ownership of both directories to the ‘nexus’ user
+
+chown -R nexus:nexus /opt/nexus /opt/sonatype-work
+
+
+Open the ‘/opt/nexus/bin/nexus.rc’ file using the nano editor:
+
+sudo nano /opt/nexus/bin/nexus.rc
+
+Uncomment the ‘runasuser’ option and set its value to ‘nexus’:
+
+run_as_user="nexus"
+
+Save the file and exit the edito
+
+Next, open the ‘/etc/nexus/bin/nexus.vmoptions’ file to configure the maximum heap memory for Nexus:
+
+sudo nano /opt/nexus/bin/nexus.vmoptions
+
+Modify the following options to set the heap memory size to ‘1024m’:
+
+-Xms1024m
+-Xmx1024m
+-XX:MaxDirectMemorySize=1024m
+
+
+Save the file and exit the editor
+
+
+Now, edit the ‘/opt/sonatype-work/nexus3/nexus.properties’ file: add below
+
+application-host=127.0.0.1
+
+
+Create a new service file for Nexus using the nano editor
+
+sudo nano /etc/systemd/system/nexus.service
+
+Add the following configuration to the file:
+
+[Unit]
+Description=nexus service
+After=network.target
+[Service]
+Type=forking
+LimitNOFILE=65536
+ExecStart=/opt/nexus/bin/nexus start
+ExecStop=/opt/nexus/bin/nexus stop
+User=nexus
+Restart=on-abort
+[Install]
+WantedBy=multi-user.target
+
+
+Reload the systemd manager and apply the new service file for Nexus by running the following command:
+
+sudo systemctl daemon-reload
+
+Start and enable the ‘nexus.service’ using the systemctl command:
+
+sudo systemctl start nexus.service
+sudo systemctl enable nexus.service
+
+
+Finally, verify the status of the ‘nexus.service’ to ensure it is running without any issues:
+
+
+sudo systemctl status nexus.service
+
+
+Copy http://publicIP:8081
+
+
+change the password and save it
+
+
+
+
+
+
+
+
+
+
+
+
